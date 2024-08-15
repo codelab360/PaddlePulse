@@ -1,3 +1,4 @@
+```
 # PaddlePulse
 
 PaddlePulse is a WordPress plugin designed to integrate Paddle's payment gateway with WordPress sites. This plugin enables seamless handling of payments and subscriptions, with a focus on maintainability and scalability.
@@ -73,3 +74,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For any questions or issues, please contact [Your Name](mailto:you@example.com).
 
+```
