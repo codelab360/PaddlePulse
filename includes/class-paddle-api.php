@@ -35,8 +35,13 @@ class Paddle_API {
         ));
 
         if (is_wp_error($response)) {
-            return $response->get_error_message();
+            $error_message = $response->get_error_message();
+            Paddle_Utils::log("API request failed for endpoint '{$endpoint}'. Error: {$error_message}", 'error', array('endpoint' => $endpoint, 'params' => $params));
+            return $error_message; 
         }
+
+        // Optional: Log successful API calls
+        // Paddle_Utils::log("API request successful for endpoint '{$endpoint}'.", 'info', array('endpoint' => $endpoint));
 
         return wp_remote_retrieve_body($response);
     }

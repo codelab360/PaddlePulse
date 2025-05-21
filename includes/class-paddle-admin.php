@@ -16,6 +16,7 @@ class Paddle_Admin {
     public function test_paddle_connection() {
         // Verify nonce and other security checks
         if (!isset($_POST['api_key']) || !isset($_POST['seller_id']) || !isset($_POST['environment'])) {
+            Paddle_Utils::log('Test connection call missing required parameters.', 'warning', $_POST);
             wp_send_json_error('Missing required parameters.');
         }
     
@@ -24,12 +25,23 @@ class Paddle_Admin {
         $environment = sanitize_text_field($_POST['environment']);
     
         $this->paddle_utils->set_environment($environment);
-        $result = $this->paddle_utils->test_connection($api_key, $seller_id);
+        // Assuming test_connection in Paddle_Utils now might also use/return more detailed info or throw exceptions
+        // For now, we adapt based on the original structure's $result being a boolean or string.
+        $result_message = $this->paddle_utils->test_connection($api_key, $seller_id); // Assuming this method returns a descriptive string on failure/success
     
-        if ($result) {
-            wp_send_json_success('Connection successful.');
+        // Check if the result message indicates success. 
+        // This might need adjustment based on how test_connection is implemented.
+        // For this example, let's assume "Connection successful!" is the positive outcome.
+        if (strpos($result_message, 'Connection successful!') !== false) {
+            Paddle_Utils::log('Connection test successful.', 'info', array('environment' => $environment));
+            wp_send_json_success($result_message);
         } else {
-            wp_send_json_error('Connection failed.');
+            $api_key_summary = 'NotProvided';
+            if (!empty($api_key)) {
+                $api_key_summary = 'EndingIn...' . substr($api_key, -4);
+            }
+            Paddle_Utils::log('Connection test failed.', 'warning', array('api_key_summary' => $api_key_summary, 'seller_id' => $seller_id, 'environment' => $environment, 'result_message' => $result_message));
+            wp_send_json_error('Connection failed: ' . $result_message);
         }
     }
 
@@ -69,9 +81,10 @@ class Paddle_Admin {
 
     // Register settings
     public function register_settings() {
-        register_setting('paddlepulse_options', 'paddle_api_key');
-        register_setting('paddlepulse_options', 'paddle_seller_id'); // Register new setting for Seller ID
-        register_setting('paddlepulse_options', 'paddle_environment'); // Register new setting for Environment
+        register_setting('paddlepulse_options', 'paddle_api_key', 'sanitize_text_field');
+        register_setting('paddlepulse_options', 'paddle_seller_id', 'sanitize_text_field'); // Register new setting for Seller ID
+        register_setting('paddlepulse_options', 'paddle_environment', 'sanitize_text_field'); // Register new setting for Environment
+        register_setting('paddlepulse_options', 'paddle_webhook_secret_key', 'sanitize_text_field');
 
         add_settings_section('paddlepulse_main', 'Main Settings', null, 'paddlepulse');
 
@@ -95,6 +108,14 @@ class Paddle_Admin {
             'paddle_environment',
             'Environment',
             array($this, 'environment_input'),
+            'paddlepulse',
+            'paddlepulse_main'
+        );
+
+        add_settings_field(
+            'paddle_webhook_secret_key',
+            'Paddle Webhook Secret Key',
+            array($this, 'webhook_secret_key_input'),
             'paddlepulse',
             'paddlepulse_main'
         );
@@ -123,6 +144,13 @@ class Paddle_Admin {
         <?php
     }
 
+    // Render Webhook Secret Key input field
+    public function webhook_secret_key_input() {
+        $webhook_secret_key = get_option('paddle_webhook_secret_key');
+        echo "<input type='text' name='paddle_webhook_secret_key' value='" . esc_attr($webhook_secret_key) . "' class='p-2 border border-gray-300 rounded-md shadow-sm w-full' />";
+        echo "<p class='description'>Enter your Paddle Webhook Secret Key. This is used to verify incoming webhooks from Paddle.</p>";
+    }
+
     // Render settings page
     public function render_settings_page() {
         ?>
@@ -141,7 +169,20 @@ class Paddle_Admin {
                 ?>
             </form>
             <div id="test-result" class="mt-6 p-4 border-l-4 rounded-md shadow-sm"></div>
-        </div>
+
+            // <!-- Add Support Section Below -->
+            <div class="mt-8 p-6 bg-white rounded-lg shadow-md space-y-4">
+                <h2 class="text-2xl font-semibold text-gray-800">Need Help?</h2>
+                <p class="text-gray-700">
+                    If you have any questions or encounter issues, please feel free to reach out to our support team: 
+                    <a href="mailto:you@example.com" class="text-blue-600 hover:underline">you@example.com</a>.
+                </p>
+                <p class="text-gray-700">
+                    You can also find extensive documentation and resources on the official Paddle website: 
+                    <a href="https://developer.paddle.com/" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">Paddle Developer Documentation</a>.
+                </p>
+            </div>
+        </div> <!-- Closing tag for class="wrap ..." -->
         <?php
     }
     

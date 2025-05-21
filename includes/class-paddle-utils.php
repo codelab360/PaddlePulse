@@ -61,4 +61,27 @@ class Paddle_Utils {
     }
 }
 
+    /**
+     * Logs a message to the WordPress debug log.
+     *
+     * @param string $message The message to log.
+     * @param string $level The log level (e.g., 'info', 'warning', 'error'). Defaults to 'info'.
+     * @param array $context Optional context data to include in the log.
+     */
+    public static function log($message, $level = 'info', $context = array()) {
+        if (defined('WP_DEBUG') && WP_DEBUG === true) {
+            $log_entry = sprintf(
+                "[%s] [PaddlePulse %s] %s",
+                strtoupper($level),
+                current_time('mysql'), // WordPress function for current time
+                $message
+            );
+            if (!empty($context)) {
+                $log_entry .= " | Context: " . print_r($context, true);
+            }
+            error_log($log_entry);
+        }
+    }
+}
+
 ?>

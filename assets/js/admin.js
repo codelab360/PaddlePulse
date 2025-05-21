@@ -4,7 +4,7 @@ jQuery(document).ready(function($) {
         
         let api_key = $('#paddle_api_key').val();
         let seller_id = $('#paddle_seller_id').val();
-        let environment = $('input[name="paddle_environment"]:checked').val();
+        let environment = $('select[name="paddle_environment"]').val();
 
         $.ajax({
             url: paddlepulseAdmin.ajax_url,
